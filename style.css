@@ -170,6 +170,12 @@ body.letter-open .hero { opacity: 0; }
   animation: rise 1.2s 0.4s cubic-bezier(.2, .8, .2, 1) both, pulse 2.4s 1.6s ease-in-out infinite;
 }
 
+.hint-name { white-space: nowrap; }
+
+@media (max-width: 640px) {
+  .hint { border-radius: 26px; line-height: 1.45; }
+}
+
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.05); }

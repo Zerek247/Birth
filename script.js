@@ -242,7 +242,7 @@
   const letterScroll = $("letter-scroll");
   const hint = $("hint");
 
-  if (isTouch) hint.textContent = "✨ Tap the gift to open it ✨";
+  if (isTouch) $("hint-verb").textContent = "Tap";
 
   // Lines fade in as they scroll into view; the first screenful is staggered.
   let revealed = 0;
