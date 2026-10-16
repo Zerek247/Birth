@@ -275,6 +275,19 @@
     }, 2000);
   });
 
+  // When the wish video ends it dissolves into the forever picture.
+  const forever = $("forever");
+  wishVideo.addEventListener("ended", () => {
+    if (wishFigure.classList.contains("vanish")) return;
+    wishFigure.classList.add("vanish");
+    setTimeout(() => {
+      wishFigure.hidden = true;
+      wishHint.style.opacity = "0";
+      forever.hidden = false;
+      forever.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 1500);
+  });
+
   closeBtn.addEventListener("click", closeLetter);
   overlay.addEventListener("click", (e) => {
     if (!e.target.closest(".letter")) closeLetter();
