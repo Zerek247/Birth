@@ -272,6 +272,7 @@
   gift.addEventListener("click", () => {
     if (opening) return;
     opening = true;
+    if (window.BirthdayMusic) window.BirthdayMusic.start();
     gift.classList.add("shake");
 
     setTimeout(() => {
@@ -453,6 +454,11 @@
     video.addEventListener("play", sync);
     video.addEventListener("pause", sync);
     video.addEventListener("ended", sync);
+
+    // Background music steps aside while a video plays.
+    const duck = (on) => window.BirthdayMusic && window.BirthdayMusic.duck(on);
+    video.addEventListener("play", () => duck(true));
+    video.addEventListener("pause", () => duck(false));
     video.addEventListener("volumechange", sync);
     video.addEventListener("timeupdate", progress);
     video.addEventListener("loadedmetadata", progress);
