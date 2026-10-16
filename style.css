@@ -63,7 +63,9 @@ body.letter-open { overflow: hidden; }
   display: block;
 }
 
-.slide.active img { animation: kenburns 9s ease-out forwards; }
+.slide.active img { animation: kenburns 9s ease-out forwards; will-change: transform; }
+
+body.letter-open .slide img { animation-play-state: paused; }
 
 @keyframes kenburns {
   from { transform: scale(1.12) translate3d(0, 1.5%, 0); }
@@ -71,8 +73,8 @@ body.letter-open { overflow: hidden; }
 }
 
 body.letter-open .slides {
-  filter: blur(14px) saturate(1.25) brightness(0.92);
-  transform: scale(1.08);
+  filter: blur(8px) saturate(1.2);
+  transform: scale(1.06);
 }
 
 .tint {
@@ -90,7 +92,10 @@ body.letter-open .slides {
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  transition: opacity 0.6s ease;
 }
+
+body.letter-open #fx { opacity: 0; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -119,12 +124,10 @@ body.letter-open .slides {
 }
 
 .title span {
-  background: linear-gradient(90deg, #f0247f, #ff5fae, #9b45f5, #2f9be8, #ff5fae, #f0247f);
-  background-size: 300% 100%;
+  background: linear-gradient(90deg, #f0247f, #ff5fae 30%, #9b45f5 65%, #2f9be8);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shimmer 8s linear infinite;
   filter:
     drop-shadow(1.5px 0 0 #fff)
     drop-shadow(-1.5px 0 0 #fff)
@@ -140,10 +143,9 @@ body.letter-open .slides {
 .title-name {
   font-size: clamp(4rem, 19vw, 9rem);
   margin-top: -0.12em;
-  animation-delay: -4s !important;
+  background-image: linear-gradient(90deg, #9b45f5, #f0247f 55%, #ff5fae) !important;
 }
 
-@keyframes shimmer { to { background-position: 300% 0; } }
 
 @keyframes rise {
   from { opacity: 0; transform: translateY(24px) scale(0.96); }
@@ -158,11 +160,9 @@ body.letter-open .slides {
   font-size: clamp(0.95rem, 3.6vw, 1.15rem);
   letter-spacing: 0.02em;
   color: var(--plum-soft);
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.9);
   box-shadow: 0 10px 30px rgba(255, 95, 162, 0.25);
-  -webkit-backdrop-filter: blur(10px) saturate(1.4);
-  backdrop-filter: blur(10px) saturate(1.4);
   animation: rise 1.2s 0.4s cubic-bezier(.2, .8, .2, 1) both, pulse 2.4s 1.6s ease-in-out infinite;
 }
 
@@ -377,6 +377,7 @@ body.letter-open .slides {
   width: max-content;
   padding-left: clamp(16px, 3vw, 32px);
   animation: marquee 60s linear infinite;
+  will-change: transform;
 }
 
 .track img {
@@ -384,9 +385,8 @@ body.letter-open .slides {
   width: auto;
   border-radius: 28px;
   border: 4px solid rgba(255, 255, 255, 0.85);
-  box-shadow: 0 24px 60px rgba(74, 31, 69, 0.3);
+  box-shadow: 0 14px 30px rgba(74, 31, 69, 0.25);
   transform: rotate(var(--tilt, 0deg));
-  filter: saturate(1.1);
 }
 
 @keyframes marquee { to { transform: translateX(-50%); } }
@@ -397,32 +397,19 @@ body.letter-open .slides {
   max-height: calc(100svh - 32px);
   display: flex;
   border-radius: 32px;
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.72), rgba(255, 240, 248, 0.6));
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.4), rgba(255, 236, 247, 0.28));
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
   box-shadow:
     0 30px 80px rgba(74, 31, 69, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(22px) saturate(1.5);
-  backdrop-filter: blur(22px) saturate(1.5);
+  -webkit-backdrop-filter: blur(7px) saturate(1.3);
+  backdrop-filter: blur(7px) saturate(1.3);
   transform: translateY(30px) scale(0.94);
   opacity: 0;
   transition: transform 0.8s cubic-bezier(.2, .9, .3, 1.1), opacity 0.6s ease;
 }
 
 .overlay.show .letter { transform: none; opacity: 1; transition-delay: 0.15s; }
-
-.letter::before { /* soft rainbow edge */
-  content: "";
-  position: absolute;
-  inset: -2px;
-  z-index: -1;
-  border-radius: 34px;
-  background: linear-gradient(135deg, #ff7ac0, #ffd166, #7fd8ff, #b48cff, #ff7ac0);
-  background-size: 300% 300%;
-  animation: shimmer 10s linear infinite;
-  opacity: 0.55;
-  filter: blur(10px);
-}
 
 .letter-scroll {
   width: 100%;
@@ -459,10 +446,10 @@ body.letter-open .slides {
 
 .ornament {
   font-family: var(--serif);
-  font-size: 2.2rem;
+  font-size: 1.8rem;
   line-height: 1;
   color: var(--pink);
-  margin-bottom: 12px;
+  margin: 2px 0 14px;
   text-shadow: 0 2px 10px rgba(255, 95, 162, 0.35);
 }
 
@@ -474,7 +461,8 @@ body.letter-open .slides {
   font-weight: 600;
   font-size: clamp(1.18rem, 4.4vw, 1.42rem);
   line-height: 1.55;
-  color: var(--plum);
+  color: #3d1239;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 255, 255, 0.85);
 }
 
 .stanza { margin: 0 0 1.15em; }
@@ -483,7 +471,6 @@ body.letter-open .slides {
   display: block;
   opacity: 0;
   transform: translateY(10px);
-  filter: blur(4px);
 }
 
 .overlay.show .line.in {
@@ -491,19 +478,32 @@ body.letter-open .slides {
   animation-delay: var(--d, 0s);
 }
 
-@keyframes line-in { to { opacity: 1; transform: none; filter: none; } }
+@keyframes line-in { to { opacity: 1; transform: none; } }
 
 .signature {
   margin: 0.4em 0 0;
   font-family: var(--script);
   font-size: clamp(3rem, 12vw, 4.4rem);
   line-height: 1.1;
-  background: linear-gradient(90deg, #ff3d8b, #b066ff, #4fb8ff, #ff3d8b);
-  background-size: 300% 100%;
+  background: linear-gradient(90deg, #f0247f, #9b45f5 55%, #2f9be8);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: shimmer 6s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+  padding: 0 0.2em;
+}
+
+.letter-name {
+  margin: 0;
+  font-family: var(--script);
+  font-weight: 400;
+  font-size: clamp(3.6rem, 15vw, 5rem);
+  line-height: 1.05;
+  background: linear-gradient(90deg, #9b45f5, #f0247f 55%, #ff5fae);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.95));
   padding: 0 0.2em;
 }
 
@@ -515,9 +515,8 @@ body.letter-open .slides {
   .gift-glow,
   .title,
   .title span,
-  .signature,
-  .letter::before { animation: none !important; }
+  .signature { animation: none !important; }
   .track { animation-duration: 180s; }
-  .line { opacity: 1; transform: none; filter: none; }
+  .line { opacity: 1; transform: none; }
   .overlay.show .line { animation: none; }
 }

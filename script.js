@@ -92,6 +92,7 @@
   let current = 0;
   slides[0].classList.add("active");
   setInterval(() => {
+    if (document.body.classList.contains("letter-open")) return;
     slides[current].classList.remove("active");
     current = (current + 1) % slides.length;
     // Restart Ken Burns on the incoming slide.
@@ -221,14 +222,15 @@
 
   const canvas = $("fx");
   const ctx = canvas.getContext("2d");
-  let W = 0, H = 0;
+  let W = 0, H = 0, DPR = 1;
 
   const isSmall = () => W < 640;
 
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = window.innerWidth;
     H = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, W < 640 ? 1.5 : 2);
+    DPR = dpr;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     canvas.style.width = W + "px";
@@ -247,16 +249,75 @@
     return `rgb(${f(r)},${f(g)},${f(b)})`;
   }
 
-  function heartPath(s) {
+  // Pre-rendered sprites: gradients and glows are drawn once, then blitted each frame.
+  const sprites = new Map();
+
+  function sprite(key, w, h, paint) {
+    let s = sprites.get(key);
+    if (!s) {
+      s = document.createElement("canvas");
+      s.width = Math.ceil(w * DPR);
+      s.height = Math.ceil(h * DPR);
+      const c = s.getContext("2d");
+      c.scale(DPR, DPR);
+      paint(c);
+      sprites.set(key, s);
+    }
+    return s;
+  }
+
+  const BALLOON_R = 40;
+
+  function balloonSprite(color) {
+    const r = BALLOON_R;
+    return sprite("b" + color, r * 2, r * 2.3, (c) => {
+      const cx = r, y = r;
+      const g = c.createRadialGradient(cx - r * 0.3, y - r * 0.35, r * 0.05, cx, y, r * 1.1);
+      g.addColorStop(0, shade(color, 0.45));
+      g.addColorStop(0.55, color);
+      g.addColorStop(1, shade(color, -0.2));
+      c.fillStyle = g;
+      c.beginPath();
+      c.ellipse(cx, y, r * 0.86, r, 0, 0, Math.PI * 2);
+      c.fill();
+      c.fillStyle = shade(color, -0.2);
+      c.beginPath();
+      c.moveTo(cx, y + r * 0.96);
+      c.lineTo(cx - r * 0.13, y + r * 1.17);
+      c.lineTo(cx + r * 0.13, y + r * 1.17);
+      c.closePath();
+      c.fill();
+      c.fillStyle = "rgba(255,255,255,0.6)";
+      c.beginPath();
+      c.ellipse(cx - r * 0.34, y - r * 0.42, r * 0.13, r * 0.25, -0.5, 0, Math.PI * 2);
+      c.fill();
+    });
+  }
+
+  const HEART_S = 24, HEART_PAD = 10;
+
+  function heartSprite(color) {
+    const size = HEART_S + HEART_PAD * 2;
+    return sprite("h" + color, size, size, (c) => {
+      c.translate(size / 2, size / 2);
+      heartPath(HEART_S, c);
+      c.fillStyle = color;
+      c.shadowColor = "rgba(255,95,162,0.45)";
+      c.shadowBlur = 8;
+      c.fill();
+    });
+  }
+
+  function heartPath(s, c = ctx) {
     // Heart centred on the origin, s = width.
     const h = s * 0.5;
-    ctx.beginPath();
-    ctx.moveTo(0, -h * 0.4);
-    ctx.bezierCurveTo(0, -h, -h, -h, -h, -h * 0.4);
-    ctx.bezierCurveTo(-h, h * 0.2, 0, h * 0.6, 0, h);
-    ctx.bezierCurveTo(0, h * 0.6, h, h * 0.2, h, -h * 0.4);
-    ctx.bezierCurveTo(h, -h, 0, -h, 0, -h * 0.4);
-    ctx.closePath();
+    c.beginPath();
+    c.moveTo(0, -h * 0.4);
+    c.bezierCurveTo(0, -h, -h, -h, -h, -h * 0.4);
+    c.bezierCurveTo(-h, h * 0.2, 0, h * 0.6, 0, h);
+    c.bezierCurveTo(0, h * 0.6, h, h * 0.2, h, -h * 0.4);
+    c.bezierCurveTo(h, -h, 0, -h, 0, -h * 0.4);
+    c.closePath();
   }
 
   class Balloon {
@@ -270,8 +331,7 @@
       this.sway = rand(6, 18);
       this.phase = rand(0, Math.PI * 2);
       this.color = pick(COLORS);
-      this.light = shade(this.color, 0.45);
-      this.dark = shade(this.color, -0.2);
+      this.img = balloonSprite(this.color);
       this.cx = this.x;
     }
 
@@ -296,27 +356,8 @@
       );
       ctx.stroke();
 
-      const g = ctx.createRadialGradient(cx - r * 0.3, y - r * 0.35, r * 0.05, cx, y, r * 1.1);
-      g.addColorStop(0, this.light);
-      g.addColorStop(0.55, this.color);
-      g.addColorStop(1, this.dark);
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.ellipse(cx, y, r * 0.86, r, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = this.dark;
-      ctx.beginPath();
-      ctx.moveTo(cx, y + r * 0.96);
-      ctx.lineTo(cx - r * 0.13, y + r * 1.17);
-      ctx.lineTo(cx + r * 0.13, y + r * 1.17);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(255,255,255,0.6)";
-      ctx.beginPath();
-      ctx.ellipse(cx - r * 0.34, y - r * 0.42, r * 0.13, r * 0.25, -0.5, 0, Math.PI * 2);
-      ctx.fill();
+      const k = r / BALLOON_R;
+      ctx.drawImage(this.img, cx - r, y - r, BALLOON_R * 2 * k, BALLOON_R * 2.3 * k);
     }
 
     hit(px, py) {
@@ -339,6 +380,7 @@
       this.rot = rand(-0.4, 0.4);
       this.alpha = rand(0.55, 0.95);
       this.color = pick(["#ff5fa2", "#ff7ab8", "#ff8fc7", "#ff4f8b", "#b48cff", "#ffffff"]);
+      this.img = heartSprite(this.color);
     }
 
     update(dt) {
@@ -352,11 +394,8 @@
       ctx.globalAlpha = this.alpha;
       ctx.translate(this.x + Math.sin(this.phase) * this.sway, this.y);
       ctx.rotate(this.rot + Math.sin(this.phase * 0.8) * 0.25);
-      heartPath(this.s);
-      ctx.fillStyle = this.color;
-      ctx.shadowColor = "rgba(255,95,162,0.45)";
-      ctx.shadowBlur = 8;
-      ctx.fill();
+      const d = (this.s / HEART_S) * (HEART_S + HEART_PAD * 2);
+      ctx.drawImage(this.img, -d / 2, -d / 2, d, d);
       ctx.restore();
     }
   }
@@ -446,9 +485,9 @@
   function populate() {
     const small = isSmall();
     const scale = reduceMotion ? 0.4 : 1;
-    balloons = Array.from({ length: Math.round((small ? 7 : 12) * scale) }, () => new Balloon());
-    hearts = Array.from({ length: Math.round((small ? 12 : 22) * scale) }, () => new Heart());
-    sparkles = Array.from({ length: Math.round((small ? 18 : 34) * scale) }, () => new Sparkle());
+    balloons = Array.from({ length: Math.round((small ? 6 : 12) * scale) }, () => new Balloon());
+    hearts = Array.from({ length: Math.round((small ? 10 : 22) * scale) }, () => new Heart());
+    sparkles = Array.from({ length: Math.round((small ? 14 : 34) * scale) }, () => new Sparkle());
   }
 
   function burst(x, y, count, color) {
@@ -472,6 +511,9 @@
   function frame(now) {
     const dt = Math.min((now - last) / 16.667, 3);
     last = now;
+    requestAnimationFrame(frame);
+    // The canvas is faded out behind the letter; skip the work.
+    if (document.body.classList.contains("letter-open") && !confetti.length) return;
     ctx.clearRect(0, 0, W, H);
 
     for (const s of sparkles) { s.update(dt); s.draw(); }
@@ -479,8 +521,6 @@
     for (const b of balloons) { b.update(dt); b.draw(); }
     for (const c of confetti) { c.update(dt); c.draw(); }
     confetti = confetti.filter((c) => !c.dead);
-
-    requestAnimationFrame(frame);
   }
 
   let resizeTimer;
@@ -488,8 +528,10 @@
     clearTimeout(resizeTimer);
     resizeTimer = setTimeout(() => {
       const wasSmall = isSmall();
+      const oldDpr = DPR;
       resize();
-      if (wasSmall !== isSmall()) populate();
+      if (DPR !== oldDpr) sprites.clear();
+      if (wasSmall !== isSmall() || DPR !== oldDpr) populate();
       else sparkles = sparkles.map(() => new Sparkle());
     }, 150);
   });
