@@ -789,7 +789,7 @@ body.letter-open #fx { opacity: 0; }
 
 .forever { margin: 0.4em 0 0; }
 
-.forever-frame { margin-bottom: 0.6em; }
+.forever-frame { margin-bottom: 1.1em; }
 
 .forever-frame img {
   display: block;
@@ -809,9 +809,11 @@ body.letter-open #fx { opacity: 0; }
 }
 
 .forever-caption {
+  position: relative;
+  z-index: 1; /* keep the tall script "M" in front of the picture */
   font-family: var(--script);
   font-size: clamp(2.6rem, 11vw, 3.6rem);
-  line-height: 1.15;
+  line-height: 1.4;
   background: linear-gradient(90deg, #9b45f5, #f0247f 55%, #ff5fae);
   -webkit-background-clip: text;
   background-clip: text;
