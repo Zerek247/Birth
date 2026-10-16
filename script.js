@@ -216,7 +216,7 @@
       figure.className = "memory";
       video = document.createElement("video");
       video.src = "videos/bubu.mp4";
-      video.controls = true;
+      video.controls = false;
       video.playsInline = true;
       video.preload = "metadata";
       figure.appendChild(video);
@@ -361,6 +361,129 @@
       });
     }, 2000);
   });
+
+  /* ---------- Video player controls ---------- */
+
+  const ICONS = {
+    play: "M8 5.5v13a1 1 0 0 0 1.5.9l10.4-6.5a1 1 0 0 0 0-1.8L9.5 4.6A1 1 0 0 0 8 5.5z",
+    pause: "M7 5h3.5v14H7zM13.5 5H17v14h-3.5z",
+    sound: "M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z",
+    muted: "M3 9v6h4l5 5V4L7 9H3zm13.6 3l2.7-2.7-1.4-1.4-2.7 2.7-2.7-2.7-1.4 1.4 2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4z",
+    full: "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
+  };
+
+  const icon = (name) =>
+    `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ICONS[name]}"/></svg>`;
+
+  const clock = (s) => {
+    s = Math.max(0, Math.floor(s || 0));
+    return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  };
+
+  function setupPlayer(video) {
+    video.controls = false;
+    video.removeAttribute("controls");
+    const frame = video.parentElement;
+    frame.classList.add("player");
+
+    const big = document.createElement("button");
+    big.type = "button";
+    big.className = "player-big";
+    big.setAttribute("aria-label", "Play");
+    big.innerHTML = icon("play");
+
+    const bar = document.createElement("div");
+    bar.className = "player-bar";
+    bar.innerHTML = `
+      <button type="button" class="pb-play" aria-label="Play">${icon("play")}</button>
+      <div class="pb-track" role="slider" aria-label="Seek" tabindex="0"><span class="pb-fill"></span><span class="pb-knob"></span></div>
+      <span class="pb-time">0:00</span>
+      <button type="button" class="pb-sound" aria-label="Mute">${icon("sound")}</button>
+      <button type="button" class="pb-full" aria-label="Full screen">${icon("full")}</button>`;
+
+    frame.append(big, bar);
+    const playBtn = bar.querySelector(".pb-play");
+    const soundBtn = bar.querySelector(".pb-sound");
+    const fullBtn = bar.querySelector(".pb-full");
+    const trackEl = bar.querySelector(".pb-track");
+    const fill = bar.querySelector(".pb-fill");
+    const knob = bar.querySelector(".pb-knob");
+    const time = bar.querySelector(".pb-time");
+
+    const toggle = () => (video.paused || video.ended ? video.play().catch(() => {}) : video.pause());
+
+    let idle;
+    const wake = () => {
+      frame.classList.add("awake");
+      clearTimeout(idle);
+      idle = setTimeout(() => !video.paused && frame.classList.remove("awake"), 2500);
+    };
+
+    const sync = () => {
+      const playing = !video.paused && !video.ended;
+      frame.classList.toggle("playing", playing);
+      playBtn.innerHTML = icon(playing ? "pause" : "play");
+      playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+      soundBtn.innerHTML = icon(video.muted ? "muted" : "sound");
+      soundBtn.setAttribute("aria-label", video.muted ? "Unmute" : "Mute");
+      wake();
+    };
+
+    const progress = () => {
+      const p = video.duration ? video.currentTime / video.duration : 0;
+      fill.style.width = p * 100 + "%";
+      knob.style.left = p * 100 + "%";
+      time.textContent = clock(video.currentTime) + " / " + clock(video.duration);
+    };
+
+    video.addEventListener("play", sync);
+    video.addEventListener("pause", sync);
+    video.addEventListener("ended", sync);
+    video.addEventListener("volumechange", sync);
+    video.addEventListener("timeupdate", progress);
+    video.addEventListener("loadedmetadata", progress);
+
+    big.addEventListener("click", toggle);
+    playBtn.addEventListener("click", toggle);
+    video.addEventListener("click", () => {
+      if (frame.classList.contains("awake") || video.paused) toggle();
+      else wake();
+    });
+    soundBtn.addEventListener("click", () => (video.muted = !video.muted));
+    fullBtn.addEventListener("click", () => {
+      if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
+      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    });
+    frame.addEventListener("pointermove", wake);
+
+    const seek = (e) => {
+      const r = trackEl.getBoundingClientRect();
+      const p = Math.min(Math.max((e.clientX - r.left) / r.width, 0), 1);
+      if (video.duration) video.currentTime = p * video.duration;
+      progress();
+    };
+    trackEl.addEventListener("pointerdown", (e) => {
+      trackEl.setPointerCapture(e.pointerId);
+      seek(e);
+      const move = (ev) => seek(ev);
+      const up = () => {
+        trackEl.removeEventListener("pointermove", move);
+        trackEl.removeEventListener("pointerup", up);
+      };
+      trackEl.addEventListener("pointermove", move);
+      trackEl.addEventListener("pointerup", up);
+    });
+    trackEl.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowRight") video.currentTime += 2;
+      if (e.key === "ArrowLeft") video.currentTime -= 2;
+    });
+
+    sync();
+    progress();
+  }
+
+  setupPlayer(video);
+  setupPlayer(wishVideo);
 
   // When the wish video ends it dissolves, the letter steps aside and the
   // finale picture fills the pop-up.
