@@ -7,7 +7,7 @@
   --gold-deep: #f4b63f;
   --plum: #4a1f45;
   --plum-soft: #7a2d6b;
-  --g: clamp(128px, 38vw, 190px); /* gift size */
+  --g: clamp(128px, min(38vw, 24vh), 190px); /* gift size */
   --script: "Great Vibes", "Brush Script MT", cursive;
   --serif: "Cormorant Garamond", Georgia, serif;
   --sans: "Quicksand", system-ui, sans-serif;
@@ -21,6 +21,7 @@ html, body { height: 100%; }
 
 body {
   margin: 0;
+  min-height: 100vh;
   min-height: 100svh;
   overflow-x: hidden;
   background: #ffe6f2;
@@ -101,6 +102,7 @@ body.letter-open #fx { opacity: 0; }
 .hero {
   position: relative;
   z-index: 3;
+  min-height: 100vh;
   min-height: 100svh;
   display: flex;
   flex-direction: column;
@@ -141,10 +143,10 @@ body.letter-open .hero { opacity: 0; }
   padding: 0.12em 0.35em; /* room for swashes, which background-clip would cut */
 }
 
-.title-top { font-size: clamp(3rem, 12.5vw, 6.8rem); }
+.title-top { font-size: clamp(3rem, min(12.5vw, 11vh), 6.8rem); }
 
 .title-name {
-  font-size: clamp(4rem, 19vw, 9rem);
+  font-size: clamp(4rem, min(19vw, 16vh), 9rem);
   margin-top: -0.18em;
   background-image: linear-gradient(90deg, #9b45f5, #f0247f 55%, #ff5fae) !important;
 }
@@ -395,6 +397,7 @@ body.letter-open .hero { opacity: 0; }
 }
 
 .track img {
+  height: min(74vh, 620px);
   height: min(74svh, 620px);
   width: auto;
   border-radius: 28px;
@@ -406,6 +409,7 @@ body.letter-open .hero { opacity: 0; }
 .letter {
   position: relative;
   width: min(640px, 100%);
+  max-height: calc(100vh - 32px);
   max-height: calc(100svh - 32px);
   display: flex;
   border-radius: 32px;
@@ -491,6 +495,7 @@ body.letter-open .hero { opacity: 0; }
 .memory video {
   display: block;
   width: 100%;
+  max-height: 70vh;
   max-height: 70svh;
   border-radius: 18px;
   background: #2b1029;
@@ -1052,6 +1057,7 @@ body.letter-open .hero { opacity: 0; }
 .finale-frame img {
   display: block;
   max-width: 100%;
+  max-height: calc(100vh - 190px);
   max-height: calc(100svh - 190px);
   width: auto;
   height: auto;
@@ -1128,8 +1134,8 @@ body.letter-open .hero { opacity: 0; }
   to { opacity: 1; transform: none; letter-spacing: 0; }
 }
 
-/* ---------- Phones: carousel on top, letter below ---------- */
-@media (max-width: 640px) {
+/* ---------- Phones held upright: carousel on top, letter below ---------- */
+@media (max-width: 640px) and (orientation: portrait) {
   .overlay {
     align-items: end;
     padding-top: 0;
@@ -1137,18 +1143,21 @@ body.letter-open .hero { opacity: 0; }
 
   .marquee {
     bottom: auto;
+    height: 36vh;
     height: 36svh;
     align-items: center;
     padding-top: env(safe-area-inset-top);
   }
 
   .track img {
+    height: calc(36vh - 36px);
     height: calc(36svh - 36px);
     border-radius: 20px;
     border-width: 3px;
   }
 
   .letter {
+    max-height: calc(64vh - 12px);
     max-height: calc(64svh - 12px);
     background: linear-gradient(165deg,
       rgba(255, 200, 228, 0.66) 0%,
@@ -1164,13 +1173,41 @@ body.letter-open .hero { opacity: 0; }
   /* Finale: carousel goes back behind the picture, full height */
   .overlay.finale-on { align-items: center; padding-top: max(16px, env(safe-area-inset-top)); }
   .overlay.finale-on .marquee { bottom: 0; height: auto; }
+  .overlay.finale-on .track img { height: min(74vh, 620px); }
   .overlay.finale-on .track img { height: min(74svh, 620px); }
 
   .finale { padding: 12px 12px 4px; border-radius: 26px; }
+  .finale-frame img { max-height: calc(100vh - 170px); }
   .finale-frame img { max-height: calc(100svh - 170px); }
   .back { top: -10px; left: -6px; width: 48px; height: 48px; }
 
   .close { top: 8px; right: 8px; width: 38px; height: 38px; font-size: 24px; }
+}
+
+/* ---------- Phones held sideways: title left, gift and button right ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  .hero {
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    align-content: center;
+    justify-content: center;
+    column-gap: clamp(24px, 5vw, 64px);
+    row-gap: 12px;
+  }
+
+  .title { grid-row: 1 / span 2; align-self: center; }
+  .title-top { font-size: clamp(2.4rem, 11vh, 4rem); }
+  .title-name { font-size: clamp(3.4rem, 18vh, 6rem); }
+
+  .gift { --g: clamp(96px, 30vh, 150px); justify-self: center; align-self: end; }
+  .hint { align-self: start; font-size: 0.95rem; }
+
+  .finale { padding: 10px 14px 4px; }
+  .finale-frame img { max-height: calc(100vh - 175px); }
+  .finale-frame img { max-height: calc(100svh - 175px); }
+  .forever-words { font-size: 2rem; }
+  .forever-heart { width: 26px; height: 24px; }
 }
 
 /* ---------- Music toggle ---------- */

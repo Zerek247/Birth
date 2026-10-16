@@ -124,9 +124,10 @@
   const track = $("track");
   const marquee = track.parentElement;
   // Two copies of the strip so the carousel loops seamlessly.
+  // Pictures load when the gift opens, so the first screen comes up faster.
   const cards = [...IMAGES, ...IMAGES].map((img, i) => {
     const el = new Image();
-    el.src = img.src;
+    el.dataset.src = img.src;
     el.alt = "";
     el.decoding = "async";
     el.draggable = false;
@@ -286,6 +287,9 @@
   });
 
   function openLetter() {
+    cards.forEach((card) => {
+      if (!card.src) card.src = card.dataset.src;
+    });
     overlay.hidden = false;
     document.body.classList.add("letter-open");
     letterScroll.scrollTop = 0;
@@ -325,6 +329,10 @@
     wishVideo.load();
     const primed = wishVideo.play();
     if (primed) primed.then(() => wishVideo.pause()).catch(() => {});
+
+    // Fetch the final picture now; it is shown when the wish video ends.
+    const finaleImg = document.querySelector(".finale-frame img");
+    if (!finaleImg.src) finaleImg.src = finaleImg.dataset.src;
 
     cake.classList.add("blown");
     cake.disabled = true;
