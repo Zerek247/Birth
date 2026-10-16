@@ -370,6 +370,7 @@
     sound: "M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z",
     muted: "M3 9v6h4l5 5V4L7 9H3zm13.6 3l2.7-2.7-1.4-1.4-2.7 2.7-2.7-2.7-1.4 1.4 2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4z",
     full: "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
+    exit: "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z",
   };
 
   const icon = (name) =>
@@ -418,6 +419,10 @@
       clearTimeout(idle);
       idle = setTimeout(() => !video.paused && frame.classList.remove("awake"), 2500);
     };
+    const sleep = () => {
+      clearTimeout(idle);
+      frame.classList.remove("awake");
+    };
 
     const sync = () => {
       const playing = !video.paused && !video.ended;
@@ -426,7 +431,7 @@
       playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
       soundBtn.innerHTML = icon(video.muted ? "muted" : "sound");
       soundBtn.setAttribute("aria-label", video.muted ? "Unmute" : "Mute");
-      wake();
+      if (playing) sleep();
     };
 
     const progress = () => {
@@ -450,11 +455,63 @@
       else wake();
     });
     soundBtn.addEventListener("click", () => (video.muted = !video.muted));
-    fullBtn.addEventListener("click", () => {
-      if (video.requestFullscreen) video.requestFullscreen().catch(() => {});
-      else if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
-    });
-    frame.addEventListener("pointermove", wake);
+    // Full screen on the frame, not the <video>: browsers force landscape for
+    // a fullscreen video element, while a fullscreen container follows how
+    // the phone is held. Where element fullscreen is missing (iPhone), the
+    // frame is lifted to <body> and pinned over the page instead.
+    let placeholder = null;
+    const isFull = () => frame.classList.contains("is-full");
+
+    const setFullUI = (on) => {
+      frame.classList.toggle("is-full", on);
+      fullBtn.innerHTML = icon(on ? "exit" : "full");
+      fullBtn.setAttribute("aria-label", on ? "Exit full screen" : "Full screen");
+      if (!on) frame.scrollIntoView({ block: "center" });
+    };
+
+    const enterFull = () => {
+      if (frame.requestFullscreen) {
+        frame.requestFullscreen({ navigationUI: "hide" }).catch(enterPseudo);
+      } else if (frame.webkitRequestFullscreen) {
+        frame.webkitRequestFullscreen();
+      } else {
+        enterPseudo();
+      }
+    };
+
+    function enterPseudo() {
+      placeholder = document.createElement("div");
+      placeholder.style.height = frame.offsetHeight + "px";
+      frame.replaceWith(placeholder);
+      document.body.appendChild(frame);
+      frame.classList.add("pseudo-full");
+      setFullUI(true);
+    }
+
+    const exitFull = () => {
+      if (placeholder) {
+        frame.classList.remove("pseudo-full");
+        placeholder.replaceWith(frame);
+        placeholder = null;
+        setFullUI(false);
+      } else if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else if (document.webkitFullscreenElement) {
+        document.webkitExitFullscreen();
+      }
+    };
+    frame.exitFull = () => isFull() && exitFull();
+
+    const onFullChange = () => {
+      const el = document.fullscreenElement || document.webkitFullscreenElement;
+      if (!placeholder) setFullUI(el === frame);
+    };
+    document.addEventListener("fullscreenchange", onFullChange);
+    document.addEventListener("webkitfullscreenchange", onFullChange);
+
+    fullBtn.addEventListener("click", () => (isFull() ? exitFull() : enterFull()));
+    frame.addEventListener("pointermove", (e) => e.pointerType === "mouse" && wake());
+    bar.addEventListener("pointerdown", wake);
 
     const seek = (e) => {
       const r = trackEl.getBoundingClientRect();
@@ -493,6 +550,7 @@
 
   wishVideo.addEventListener("ended", () => {
     if (wishFigure.classList.contains("vanish")) return;
+    if (wishFigure.exitFull) wishFigure.exitFull();
     wishFigure.classList.add("vanish");
     setTimeout(() => {
       overlay.classList.add("finale-on");
