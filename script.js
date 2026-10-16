@@ -119,7 +119,22 @@
 
   const poemEl = $("poem");
   const lines = [];
-  POEM.forEach((stanza) => {
+  // The video sits between "There's no one like you, my love" and "I kept your name inside my heart".
+  const VIDEO_AFTER_STANZA = 5;
+  let video = null;
+
+  POEM.forEach((stanza, i) => {
+    if (i === VIDEO_AFTER_STANZA + 1) {
+      const figure = document.createElement("figure");
+      figure.className = "memory";
+      video = document.createElement("video");
+      video.src = "videos/bubu.mp4";
+      video.controls = true;
+      video.playsInline = true;
+      video.preload = "metadata";
+      figure.appendChild(video);
+      poemEl.appendChild(figure);
+    }
     const p = document.createElement("p");
     p.className = "stanza";
     stanza.forEach((text) => {
@@ -197,6 +212,7 @@
     if (overlay.hidden) return;
     overlay.classList.remove("show");
     document.body.classList.remove("letter-open");
+    if (video) video.pause();
     setTimeout(() => {
       overlay.hidden = true;
       gift.classList.remove("open");
