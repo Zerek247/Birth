@@ -275,29 +275,41 @@
     }, 2000);
   });
 
-  // When the wish video ends it dissolves into the forever picture.
-  const forever = $("forever");
+  // When the wish video ends it dissolves, the letter steps aside and the
+  // finale picture fills the pop-up.
+  const finale = $("finale");
+  const backBtn = $("back");
+  const inFinale = () => overlay.classList.contains("finale-on");
+
   wishVideo.addEventListener("ended", () => {
     if (wishFigure.classList.contains("vanish")) return;
     wishFigure.classList.add("vanish");
     setTimeout(() => {
-      wishFigure.hidden = true;
-      wishHint.style.opacity = "0";
-      forever.hidden = false;
-      forever.scrollIntoView({ behavior: "smooth", block: "center" });
+      overlay.classList.add("finale-on");
+      finale.hidden = false;
+      backBtn.focus({ preventScroll: true });
     }, 1500);
   });
 
+  // Start the whole surprise over from the gift.
+  function restart() {
+    overlay.classList.add("resetting");
+    setTimeout(() => window.location.reload(), 550);
+  }
+
+  backBtn.addEventListener("click", restart);
   closeBtn.addEventListener("click", closeLetter);
   overlay.addEventListener("click", (e) => {
-    if (!e.target.closest(".letter")) closeLetter();
+    if (!inFinale() && !e.target.closest(".letter")) closeLetter();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeLetter();
+    if (e.key === "Escape") inFinale() ? restart() : closeLetter();
     // Keep keyboard focus inside the dialog.
     if (e.key === "Tab" && !overlay.hidden) {
-      const focusables = [closeBtn, letterScroll, ...letterScroll.querySelectorAll("button, video")]
-        .filter((el) => !el.disabled && !el.closest("[hidden]"));
+      const focusables = (inFinale()
+        ? [backBtn]
+        : [closeBtn, letterScroll, ...letterScroll.querySelectorAll("button, video")]
+      ).filter((el) => !el.disabled && !el.closest("[hidden]"));
       const i = focusables.indexOf(document.activeElement);
       const next = e.shiftKey ? i - 1 : i + 1;
       e.preventDefault();

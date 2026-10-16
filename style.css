@@ -790,20 +790,88 @@ body.letter-open .hero { opacity: 0; }
   100% { opacity: 0; filter: blur(18px) brightness(1.8); transform: scale(1.12); }
 }
 
-.forever { margin: 0.4em 0 0; }
+/* Finale: the letter steps aside and the picture takes the whole pop-up */
+.letter,
+.finale { grid-area: 1 / 1; }
 
-.forever-frame { margin-bottom: 1.1em; }
+.overlay.finale-on .letter {
+  opacity: 0;
+  transform: scale(0.94);
+  pointer-events: none;
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
 
-.forever-frame img {
+.finale {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  margin: 0;
+  width: min(560px, 100%);
+  padding: 18px 18px 8px;
+  border-radius: 32px;
+  text-align: center;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.55), rgba(255, 236, 247, 0.42));
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 30px 80px rgba(74, 31, 69, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  backdrop-filter: blur(10px) saturate(1.3);
+}
+
+.finale-frame {
+  margin: 0 auto 0.5em;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.finale-frame img {
   display: block;
-  width: 100%;
+  max-width: 100%;
+  max-height: calc(100svh - 190px);
+  width: auto;
   height: auto;
   border-radius: 18px;
 }
 
-.forever:not([hidden]) .forever-frame {
+.finale:not([hidden]) .finale-frame {
   animation: appear 1.8s cubic-bezier(.2, .8, .2, 1) both;
 }
+
+.back {
+  position: absolute;
+  top: -14px;
+  left: -14px;
+  z-index: 2;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 8px 22px rgba(122, 45, 107, 0.3), inset 0 0 0 2px rgba(255, 143, 199, 0.5);
+  cursor: pointer;
+  animation: back-in 0.8s 2.2s cubic-bezier(.2, 1.4, .4, 1) backwards;
+  transition: transform 0.25s ease;
+}
+
+.back svg {
+  width: 30px;
+  height: 30px;
+  fill: none;
+  stroke: url(#back-grad);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.back:hover { transform: rotate(-20deg) scale(1.06); }
+.back:focus-visible { outline: 3px solid var(--pink); outline-offset: 3px; }
+
+@keyframes back-in {
+  from { opacity: 0; transform: scale(0.4) rotate(90deg); }
+  to { opacity: 1; transform: none; }
+}
+
+.overlay.resetting { transition: opacity 0.6s ease; opacity: 0; }
 
 @keyframes appear {
   0% { opacity: 0; filter: blur(18px) brightness(1.8); transform: scale(0.92); }
@@ -825,7 +893,7 @@ body.letter-open .hero { opacity: 0; }
   padding: 0 0.2em;
 }
 
-.forever:not([hidden]) .forever-caption {
+.finale:not([hidden]) .forever-caption {
   animation: caption-in 1.4s 1.2s cubic-bezier(.2, .8, .2, 1) both;
 }
 
@@ -862,6 +930,15 @@ body.letter-open .hero { opacity: 0; }
   }
 
   .letter-scroll { padding-top: 30px; }
+
+  /* Finale: carousel goes back behind the picture, full height */
+  .overlay.finale-on { align-items: center; padding-top: max(16px, env(safe-area-inset-top)); }
+  .overlay.finale-on .marquee { bottom: 0; height: auto; }
+  .overlay.finale-on .track img { height: min(74svh, 620px); }
+
+  .finale { padding: 12px 12px 4px; border-radius: 26px; }
+  .finale-frame img { max-height: calc(100svh - 170px); }
+  .back { top: -10px; left: -6px; width: 48px; height: 48px; }
 
   .close { top: 8px; right: 8px; width: 38px; height: 38px; font-size: 24px; }
 }

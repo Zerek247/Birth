@@ -77,17 +77,30 @@
           <figure class="memory wish-video" id="wish-video" hidden>
             <video src="videos/wish.mp4" playsinline controls preload="none"></video>
           </figure>
-
-          <figure class="forever" id="forever" hidden>
-            <div class="memory forever-frame">
-              <img src="images/forever.webp" alt="Dudu kneeling with a ring before Bubu in her wedding dress, with the words: I lif lof u baby motki, smart bubu love very bzzaf muuh" width="1145" height="1374" decoding="async" />
-            </div>
-            <figcaption class="forever-caption">My eternal love</figcaption>
-          </figure>
         </section>
         <div class="ornament ornament-end" aria-hidden="true">❦</div>
       </div>
     </article>
+
+    <!-- Shown after the wish video ends -->
+    <figure class="finale" id="finale" hidden>
+      <button class="back" id="back" type="button" aria-label="Start again">
+        <svg viewBox="0 0 48 48" aria-hidden="true">
+          <defs>
+            <linearGradient id="back-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ff5fa2" />
+              <stop offset="1" stop-color="#9b45f5" />
+            </linearGradient>
+          </defs>
+          <path d="M18 13 L9 21 L18 29" />
+          <path d="M10 21 H27 C34.5 21 39 25.5 39 31.5 C39 37 34.5 40 29 40 H23" />
+        </svg>
+      </button>
+      <div class="memory finale-frame">
+        <img src="images/forever.webp" alt="Dudu kneeling with a ring before Bubu in her wedding dress, with the words: I lif lof u baby motki, smart bubu love very bzzaf muuh" width="1145" height="1374" decoding="async" />
+      </div>
+      <figcaption class="forever-caption">My eternal love</figcaption>
+    </figure>
   </div>
 
   <script src="script.js"></script>
