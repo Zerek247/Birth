@@ -213,6 +213,7 @@
     overlay.classList.remove("show");
     document.body.classList.remove("letter-open");
     if (video) video.pause();
+    wishVideo.pause();
     setTimeout(() => {
       overlay.hidden = true;
       gift.classList.remove("open");
@@ -220,6 +221,59 @@
       gift.focus({ preventScroll: true });
     }, 700);
   }
+
+  /* ---------- Wish cake ---------- */
+
+  const cake = $("cake");
+  const wishHint = $("wish-hint");
+  const wishBurst = $("wish-burst");
+  const wishFigure = $("wish-video");
+  const wishVideo = wishFigure.querySelector("video");
+
+  cake.addEventListener("click", () => {
+    if (cake.classList.contains("blown")) return;
+
+    // Prime playback inside the tap so mobile browsers allow sound later.
+    wishVideo.load();
+    const primed = wishVideo.play();
+    if (primed) primed.then(() => wishVideo.pause()).catch(() => {});
+
+    cake.classList.add("blown");
+    cake.disabled = true;
+    wishHint.style.opacity = "0";
+
+    setTimeout(() => {
+      const emojis = ["💖", "✨", "🎉", "💕", "⭐", "🎈", "💗"];
+      for (let i = 0; i < 18; i++) {
+        const s = document.createElement("span");
+        const angle = (i / 18) * Math.PI * 2 + rand(-0.2, 0.2);
+        const dist = rand(80, 160);
+        s.textContent = pick(emojis);
+        s.style.setProperty("--x", Math.cos(angle) * dist + "px");
+        s.style.setProperty("--y", Math.sin(angle) * dist - 40 + "px");
+        s.style.setProperty("--r", rand(-60, 60) + "deg");
+        s.style.setProperty("--s", rand(16, 28) + "px");
+        wishBurst.appendChild(s);
+      }
+      setTimeout(() => (wishBurst.textContent = ""), 1600);
+    }, 450);
+
+    setTimeout(() => cake.classList.add("gone"), 1300);
+
+    setTimeout(() => {
+      cake.hidden = true;
+      wishHint.textContent = "Your wish is on its way ✨";
+      wishHint.style.opacity = "1";
+      wishFigure.hidden = false;
+      wishFigure.scrollIntoView({ behavior: "smooth", block: "center" });
+      wishVideo.currentTime = 0;
+      wishVideo.play().catch(() => {
+        // Sound was blocked: play muted so it still starts; controls let her unmute.
+        wishVideo.muted = true;
+        wishVideo.play().catch(() => {});
+      });
+    }, 2000);
+  });
 
   closeBtn.addEventListener("click", closeLetter);
   overlay.addEventListener("click", (e) => {
@@ -229,8 +283,12 @@
     if (e.key === "Escape") closeLetter();
     // Keep keyboard focus inside the dialog.
     if (e.key === "Tab" && !overlay.hidden) {
+      const focusables = [closeBtn, letterScroll, ...letterScroll.querySelectorAll("button, video")]
+        .filter((el) => !el.disabled && !el.closest("[hidden]"));
+      const i = focusables.indexOf(document.activeElement);
+      const next = e.shiftKey ? i - 1 : i + 1;
       e.preventDefault();
-      (document.activeElement === closeBtn ? letterScroll : closeBtn).focus();
+      focusables[(next + focusables.length) % focusables.length].focus();
     }
   });
 
