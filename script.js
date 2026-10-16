@@ -371,6 +371,7 @@
     muted: "M3 9v6h4l5 5V4L7 9H3zm13.6 3l2.7-2.7-1.4-1.4-2.7 2.7-2.7-2.7-1.4 1.4 2.7 2.7-2.7 2.7 1.4 1.4 2.7-2.7 2.7 2.7 1.4-1.4z",
     full: "M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z",
     exit: "M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z",
+    replay: "M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z",
   };
 
   const icon = (name) =>
@@ -424,14 +425,22 @@
       frame.classList.remove("awake");
     };
 
+    // States: before play only the big play icon shows; while playing and
+    // after the end nothing shows until a tap; after the end that tap
+    // reveals a replay icon.
+    let wasPlaying = false;
     const sync = () => {
       const playing = !video.paused && !video.ended;
       frame.classList.toggle("playing", playing);
-      playBtn.innerHTML = icon(playing ? "pause" : "play");
-      playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+      frame.classList.toggle("ended", video.ended);
+      big.innerHTML = icon(video.ended ? "replay" : "play");
+      big.setAttribute("aria-label", video.ended ? "Replay" : "Play");
+      playBtn.innerHTML = icon(playing ? "pause" : video.ended ? "replay" : "play");
+      playBtn.setAttribute("aria-label", playing ? "Pause" : video.ended ? "Replay" : "Play");
       soundBtn.innerHTML = icon(video.muted ? "muted" : "sound");
       soundBtn.setAttribute("aria-label", video.muted ? "Unmute" : "Mute");
-      if (playing) sleep();
+      if ((playing && !wasPlaying) || video.ended) sleep();
+      wasPlaying = playing;
     };
 
     const progress = () => {
@@ -451,7 +460,9 @@
     big.addEventListener("click", toggle);
     playBtn.addEventListener("click", toggle);
     video.addEventListener("click", () => {
-      if (frame.classList.contains("awake") || video.paused) toggle();
+      const awake = frame.classList.contains("awake");
+      if (video.ended) awake ? toggle() : wake();
+      else if (video.paused || awake) toggle();
       else wake();
     });
     soundBtn.addEventListener("click", () => (video.muted = !video.muted));

@@ -562,11 +562,14 @@ body.letter-open .hero { opacity: 0; }
 
 .player-big svg { width: 46%; height: 46%; margin-left: 4px; }
 
-.player.playing .player-big {
+.player.playing .player-big,
+.player.ended:not(.awake) .player-big {
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.7);
   pointer-events: none;
 }
+
+.player.ended .player-big svg { margin-left: 0; }
 
 .player-bar {
   position: absolute;
@@ -585,7 +588,7 @@ body.letter-open .hero { opacity: 0; }
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-.player.playing:not(.awake) .player-bar {
+.player:not(.awake) .player-bar {
   opacity: 0;
   transform: translateY(8px);
   pointer-events: none;
@@ -990,13 +993,48 @@ body.letter-open .hero { opacity: 0; }
 }
 
 .finale .forever-caption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   background: none;
-  color: #fff;
   filter: none;
-  text-shadow:
-    0 0 2px rgba(122, 45, 107, 0.7),
-    0 3px 10px rgba(122, 45, 107, 0.55),
-    0 0 22px rgba(255, 95, 162, 0.6);
+  padding: 0 0 6px;
+  line-height: 1.2;
+}
+
+.forever-words {
+  font-family: "Dancing Script", var(--script);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 10vw, 3.2rem);
+  padding: 0.08em 0.3em;
+  background: linear-gradient(90deg, #c2185b, #e0245e 40%, #8e24aa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter:
+    drop-shadow(1.5px 0 0 #fff)
+    drop-shadow(-1.5px 0 0 #fff)
+    drop-shadow(0 1.5px 0 #fff)
+    drop-shadow(0 -1.5px 0 #fff)
+    drop-shadow(0 4px 10px rgba(122, 45, 107, 0.35));
+}
+
+.forever-heart {
+  width: 34px;
+  height: 31px;
+  margin-top: 2px;
+  fill: url(#heart-grad);
+  stroke: #fff;
+  stroke-width: 2;
+  filter: drop-shadow(0 4px 8px rgba(224, 36, 94, 0.45));
+  animation: heartbeat 1.4s 2.6s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 60%, 100% { transform: scale(1); }
+  15% { transform: scale(1.2); }
+  30% { transform: scale(0.95); }
+  45% { transform: scale(1.12); }
 }
 
 .finale-frame {
