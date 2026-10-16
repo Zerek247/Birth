@@ -474,10 +474,11 @@ body.letter-open .hero { opacity: 0; }
 .poem {
   font-family: var(--serif);
   font-style: italic;
-  font-weight: 600;
-  font-size: clamp(1.18rem, 4.4vw, 1.42rem);
-  line-height: 1.55;
-  color: #3d1239;
+  font-weight: 700;
+  font-size: clamp(1.26rem, 4.8vw, 1.5rem);
+  line-height: 1.5;
+  letter-spacing: 0.012em;
+  color: #2c0a29;
   text-shadow: 0 0 2px rgba(255, 255, 255, 0.95), 0 0 10px rgba(255, 255, 255, 0.85);
 }
 
