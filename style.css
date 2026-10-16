@@ -371,15 +371,19 @@ body.letter-open .hero { opacity: 0; }
   display: flex;
   align-items: center;
   overflow: hidden;
-  pointer-events: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
 }
+
+.marquee:active { cursor: grabbing; }
 
 .track {
   display: flex;
   gap: clamp(16px, 3vw, 32px);
   width: max-content;
   padding-left: clamp(16px, 3vw, 32px);
-  animation: marquee 60s linear infinite;
   will-change: transform;
 }
 
@@ -391,8 +395,6 @@ body.letter-open .hero { opacity: 0; }
   box-shadow: 0 14px 30px rgba(74, 31, 69, 0.25);
   transform: rotate(var(--tilt, 0deg));
 }
-
-@keyframes marquee { to { transform: translateX(-50%); } }
 
 .letter {
   position: relative;
@@ -954,7 +956,6 @@ body.letter-open .hero { opacity: 0; }
   .signature,
   .cake:not(.blown):not(.gone),
   .cake:not(.blown) .flame { animation: none !important; }
-  .track { animation-duration: 180s; }
   .line { opacity: 1; transform: none; }
   .overlay.show .line { animation: none; }
 }

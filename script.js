@@ -12,6 +12,13 @@
     { src: "images/5.jpg", pos: "50% 74%" },
     { src: "images/6.jpg", pos: "50% 62%" },
     { src: "images/7.webp", pos: "50% 70%" },
+    { src: "images/10.jpg", pos: "50% 55%" },
+    { src: "images/11.jpg", pos: "50% 62%" },
+    { src: "images/12.jpg", pos: "50% 50%" },
+    { src: "images/13.jpg", pos: "50% 55%" },
+    { src: "images/14.jpg", pos: "50% 50%" },
+    { src: "images/15.jpg", pos: "50% 50%" },
+    { src: "images/16.webp", pos: "50% 45%" },
   ];
 
   const POEM = [
@@ -80,7 +87,6 @@
     const slide = document.createElement("div");
     slide.className = "slide";
     const el = new Image();
-    el.src = img.src;
     el.alt = "";
     el.decoding = "async";
     el.style.setProperty("--pos", img.pos);
@@ -89,12 +95,22 @@
     return slide;
   });
 
+  // Wallpapers load one step ahead instead of all at once.
+  const loadSlide = (i) => {
+    const img = slides[i].firstChild;
+    if (!img.src) img.src = IMAGES[i].src;
+  };
+
   let current = 0;
+  loadSlide(0);
+  loadSlide(1);
   slides[0].classList.add("active");
   setInterval(() => {
     if (document.body.classList.contains("letter-open")) return;
     slides[current].classList.remove("active");
     current = (current + 1) % slides.length;
+    loadSlide(current);
+    loadSlide((current + 1) % slides.length);
     // Restart Ken Burns on the incoming slide.
     const img = slides[current].firstChild;
     img.style.animation = "none";
@@ -106,16 +122,87 @@
   /* ---------- Pop-up carousel + poem ---------- */
 
   const track = $("track");
-  // Two copies of the strip so the marquee loops seamlessly.
-  [...IMAGES, ...IMAGES].forEach((img, i) => {
+  const marquee = track.parentElement;
+  // Two copies of the strip so the carousel loops seamlessly.
+  const cards = [...IMAGES, ...IMAGES].map((img, i) => {
     const el = new Image();
     el.src = img.src;
     el.alt = "";
-    el.loading = "lazy";
     el.decoding = "async";
+    el.draggable = false;
     el.style.setProperty("--tilt", (i % 2 ? 2.5 : -2.5) + "deg");
     track.appendChild(el);
+    return el;
   });
+
+  // Carousel motion: drifts on its own; a tap jumps to the next picture,
+  // pressing and holding stops it, dragging scrolls by hand.
+  const carousel = {
+    offset: 0,
+    held: false,
+    dragged: false,
+    startX: 0,
+    lastX: 0,
+    downAt: 0,
+    jump: null, // { from, to, start }
+  };
+
+  const loopWidth = () => cards[IMAGES.length].offsetLeft - cards[0].offsetLeft;
+  const driftSpeed = () => (reduceMotion ? 0.15 : window.innerWidth < 640 ? 0.55 : 0.7); // px per 60fps frame
+
+  function wrapOffset() {
+    const w = loopWidth();
+    if (w > 0) carousel.offset = ((carousel.offset % w) + w) % w;
+  }
+
+  function nextCardDelta() {
+    const pad = cards[0].offsetLeft;
+    for (const card of cards) {
+      const left = card.offsetLeft - carousel.offset;
+      if (left > pad + 4) return left - pad;
+    }
+    return 0;
+  }
+
+  function stepCarousel(dt) {
+    if (carousel.jump) {
+      const t = Math.min((performance.now() - carousel.jump.start) / 450, 1);
+      const ease = 1 - Math.pow(1 - t, 3);
+      carousel.offset = carousel.jump.from + (carousel.jump.to - carousel.jump.from) * ease;
+      if (t === 1) carousel.jump = null;
+    } else if (!carousel.held) {
+      carousel.offset += driftSpeed() * dt;
+    }
+    wrapOffset();
+    track.style.transform = `translate3d(${-carousel.offset}px, 0, 0)`;
+  }
+
+  marquee.addEventListener("pointerdown", (e) => {
+    carousel.held = true;
+    carousel.dragged = false;
+    carousel.jump = null;
+    carousel.startX = carousel.lastX = e.clientX;
+    carousel.downAt = performance.now();
+    marquee.setPointerCapture(e.pointerId);
+  });
+
+  marquee.addEventListener("pointermove", (e) => {
+    if (!carousel.held) return;
+    if (Math.abs(e.clientX - carousel.startX) > 8) carousel.dragged = true;
+    if (carousel.dragged) carousel.offset -= e.clientX - carousel.lastX;
+    carousel.lastX = e.clientX;
+  });
+
+  const release = () => {
+    if (!carousel.held) return;
+    carousel.held = false;
+    const quickTap = !carousel.dragged && performance.now() - carousel.downAt < 300;
+    if (quickTap) {
+      carousel.jump = { from: carousel.offset, to: carousel.offset + nextCardDelta(), start: performance.now() };
+    }
+  };
+  marquee.addEventListener("pointerup", release);
+  marquee.addEventListener("pointercancel", release);
 
   const poemEl = $("poem");
   const lines = [];
@@ -300,7 +387,7 @@
   backBtn.addEventListener("click", restart);
   closeBtn.addEventListener("click", closeLetter);
   overlay.addEventListener("click", (e) => {
-    if (!inFinale() && !e.target.closest(".letter")) closeLetter();
+    if (!inFinale() && !e.target.closest(".letter, .marquee")) closeLetter();
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") inFinale() ? restart() : closeLetter();
@@ -611,6 +698,7 @@
     const dt = Math.min((now - last) / 16.667, 3);
     last = now;
     requestAnimationFrame(frame);
+    if (!overlay.hidden) stepCarousel(dt);
     // The canvas is faded out behind the letter; skip the work.
     if (document.body.classList.contains("letter-open") && !confetti.length) return;
     ctx.clearRect(0, 0, W, H);
